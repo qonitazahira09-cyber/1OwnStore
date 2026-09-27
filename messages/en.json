@@ -1,0 +1,44 @@
+{
+  "Navbar": {
+    "beranda": "Home",
+    "katalog": "Catalog",
+    "paketBundling": "Bundle Packages",
+    "cariPlaceholder": "Search for snacks...",
+    "cari": "Search",
+    "keranjang": "Cart",
+    "akun": "Account"
+  },
+
+  "Home": {
+    "heroEyebrow": "Best Picks",
+    "heroTitleLine1": "Authentic Freshness from Malang,",
+    "heroTitleAccent": "Enjoy Your Moment",
+    "btnLihatKoleksi": "View Collection",
+
+    "favoritesTitle": "Local Favorites",
+    "favoritesSub": "Authentic flavors made fresh in Malang",
+    "lihatSelengkapnya": "View More",
+
+    "tambahKeranjang": "Add to cart",
+
+    "badgeBestseller": "BEST SELLER",
+    "badgeFresh": "FRESH",
+    "badgeNew": "NEW",
+
+    "produk1Nama": "Jackfruit Chips",
+    "produk1Desc": "Crispy Jackfruit Chips",
+    "produk2Nama": "Apple Cider Brosem",
+    "produk2Desc": "Authentic Apple Cider",
+    "produk3Nama": "Tempeh Chips",
+    "produk3Desc": "Savory Tempeh Crisps",
+    "produk4Nama": "Mix Fruit Chips",
+    "produk4Desc": "Assorted Crunchy Fruits",
+
+    "snackboxEyebrow": "SPECIAL PACKAGE",
+    "snackboxTitleLine1": "Snack",
+    "snackboxTitleLine2": "Box",
+    "snackboxTitleLine3": "Special",
+    "snackboxDesc": "Experience the best flavors of Malang in one curated box. Perfect for gifts or personal snacking.",
+    "btnPilihKotak": "Choose Your Box"
+  }
+}

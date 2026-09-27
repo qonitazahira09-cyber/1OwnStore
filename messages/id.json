@@ -1,0 +1,44 @@
+{
+  "Navbar": {
+    "beranda": "Beranda",
+    "katalog": "Katalog",
+    "paketBundling": "Paket Bundling",
+    "cariPlaceholder": "Cari camilan...",
+    "cari": "Cari",
+    "keranjang": "Keranjang",
+    "akun": "Akun"
+  },
+
+  "Home": {
+    "heroEyebrow": "Pilihan Terbaik",
+    "heroTitleLine1": "Kesegaran Asli Malang,",
+    "heroTitleAccent": "Nikmati Momenmu",
+    "btnLihatKoleksi": "Lihat Koleksi",
+
+    "favoritesTitle": "Pilihan Lokal Favorit",
+    "favoritesSub": "Rasa autentik yang dibuat segar di Malang",
+    "lihatSelengkapnya": "Lihat Selengkapnya",
+
+    "tambahKeranjang": "Tambah ke keranjang",
+
+    "badgeBestseller": "BEST SELLER",
+    "badgeFresh": "FRESH",
+    "badgeNew": "NEW",
+
+    "produk1Nama": "Keripik Nangka",
+    "produk1Desc": "Keripik Nangka Renyah",
+    "produk2Nama": "Sari Apel Brosem",
+    "produk2Desc": "Sari Apel Asli",
+    "produk3Nama": "Keripik Tempe",
+    "produk3Desc": "Keripik Tempe Gurih",
+    "produk4Nama": "Mix Fruit Chips",
+    "produk4Desc": "Aneka Keripik Buah",
+
+    "snackboxEyebrow": "PAKET SPESIAL",
+    "snackboxTitleLine1": "Snack",
+    "snackboxTitleLine2": "Box",
+    "snackboxTitleLine3": "Spesial",
+    "snackboxDesc": "Rasakan ragam rasa terbaik Malang dalam satu kotak pilihan. Pas untuk bingkisan maupun camilan pribadi.",
+    "btnPilihKotak": "Pilih Kotak Pilihanmu"
+  }
+}

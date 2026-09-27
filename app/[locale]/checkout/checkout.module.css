@@ -1,0 +1,358 @@
+/* ===== Variabel warna ===== */
+.wrapper {
+  --bg: #FBF2E7;
+  --card-border: #F3C79A;
+  --orange: #ED7D31;
+  --orange-dark: #D9691F;
+  --text: #1E1B16;
+  --text-muted: #948C7E;
+  --line: #EFE6D8;
+  --green: #1E8449;
+  --green-bg: #E5F5EA;
+  --cream-pill: #FBF0D6;
+  --gray-pill: #F1ECE3;
+
+  background: var(--bg);
+  padding: 40px 24px;
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--text);
+}
+
+/* ===== Breadcrumb ===== */
+.breadcrumb {
+  max-width: 660px;
+  margin: 0 auto 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.breadcrumb .active {
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.breadcrumb .orderId {
+  margin-left: auto;
+  font-size: 13px;
+}
+
+/* ===== Kartu utama ===== */
+.card {
+  max-width: 660px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  padding: 32px;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 32px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* ===== Badge / pill generik ===== */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.pillPink   { background: #FBE7E0; color: #C1512E; }
+.pillGray   { background: var(--gray-pill); color: var(--text); }
+.pillCream  { background: var(--cream-pill); color: #8A6A1D; border: 1px solid #EAD79B; }
+.pillGreen  { background: var(--green-bg); color: var(--green); }
+.pillGreenOutline { background: #fff; color: var(--green); border: 1px solid #BFE3CB; }
+
+/* ===== Section ===== */
+.section {
+  padding: 24px 0;
+  border-bottom: 1px solid var(--line);
+}
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ===== Row produk ===== */
+.productRow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+.productIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: #F6F1E9;
+  border: 1px solid var(--line);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+.productInfo { flex: 1; min-width: 0; }
+.productName { font-weight: 600; font-size: 15px; }
+.productDesc { color: var(--text-muted); font-size: 13px; margin: 2px 0 4px; }
+.productPrice { font-weight: 700; font-size: 14px; }
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.stepper button {
+  border: none;
+  background: none;
+  font-size: 15px;
+  cursor: pointer;
+  color: var(--text);
+  line-height: 1;
+}
+.stepper span { font-size: 14px; min-width: 12px; text-align: center; }
+
+.removeBtn {
+  border: none;
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 6px;
+}
+
+/* ===== Form ===== */
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.full { grid-column: 1 / -1; }
+.field label { font-size: 13px; color: var(--text-muted); }
+.field input {
+  border: 1.5px solid var(--orange);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  background: #fff;
+}
+.field input::placeholder { color: #BDB4A6; }
+
+/* ===== Kurir ===== */
+.courierBox {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+}
+.courierTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.courierIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: #F6F1E9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.courierInfo { flex: 1; min-width: 0; }
+.courierName {
+  font-weight: 700;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.courierDesc {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin-top: 6px;
+}
+.courierRight {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.courierPrice { font-weight: 700; font-size: 16px; }
+.changeBtn {
+  border: 1px solid var(--line);
+  background: #F6F1E9;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+}
+.courierFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+.courierFooter .altText { color: var(--text-muted); }
+.link { color: var(--orange); font-weight: 600; text-decoration: none; }
+
+/* ===== Kupon ===== */
+.couponRow { display: flex; gap: 10px; }
+.couponRow input {
+  flex: 1;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
+.applyBtn {
+  border: none;
+  background: #EFE2CB;
+  color: #6B5A2E;
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 0 20px;
+  cursor: pointer;
+  font-size: 14px;
+}
+.couponSuccess {
+  color: var(--green);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+/* ===== Ringkasan harga ===== */
+.priceList { padding: 20px 0 0; }
+.priceRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 6px 0;
+}
+.value { font-weight: 600; }
+.discount .value { color: var(--orange-dark); }
+.free .value { color: var(--green); }
+
+.totalBox {
+  background: #FBF2E7;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 20px 0;
+}
+.totalLabel { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; }
+.totalPrice {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: 700;
+}
+
+/* ===== CTA ===== */
+.checkoutBtn {
+  width: 100%;
+  background: var(--orange);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.checkoutBtn:hover { background: var(--orange-dark); }
+
+.guarantee {
+  text-align: center;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.guarantee .strong { font-weight: 700; font-size: 14px; }
+.guarantee p {
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 6px;
+  line-height: 1.6;
+}
+
+/* ===== Trust badges bawah ===== */
+.trustRow {
+  max-width: 660px;
+  margin: 20px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.trustItem {
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: #fff;
+}
+.t { font-weight: 700; font-size: 14px; }
+.d { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .formGrid { grid-template-columns: 1fr; }
+  .trustRow { grid-template-columns: 1fr; }
+  .courierTop { flex-wrap: wrap; }
+  .courierRight { align-items: flex-start; }
+}

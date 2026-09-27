@@ -1,0 +1,566 @@
+/* ================= LAYOUT ================= */
+.wrapper {
+  display: flex;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 32px;
+  align-items: flex-start;
+  font-family: "Poppins", "Inter", system-ui, sans-serif;
+  color: #2b2118;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  width: 340px;
+  flex-shrink: 0;
+  background: #f4ece0;
+  border-radius: 20px;
+  padding: 28px;
+}
+
+.profileCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-bottom: 24px;
+}
+
+.avatarBox {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: #d8cdbf;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 600;
+  color: #5c5245;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3aa655;
+  border: 3px solid #f4ece0;
+}
+
+.profileName {
+  font-size: 19px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.profileEmail {
+  font-size: 13px;
+  color: #8a7d6c;
+  margin: 0 0 12px;
+}
+
+.memberBadge {
+  font-size: 12px;
+  background: #ece0cd;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: #5c5245;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid #e3d7c6;
+  padding-top: 20px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: none;
+  background: transparent;
+  padding: 13px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a4033;
+  cursor: pointer;
+  text-align: left;
+}
+
+.menuItem:hover {
+  background: #ece0cd;
+}
+
+.menuItemActive {
+  background: #221c15;
+  color: #ffffff;
+}
+
+.menuItemActive:hover {
+  background: #221c15;
+}
+
+.menuItemDanger {
+  color: #c23b2c;
+}
+
+.menuLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menuBadge {
+  font-size: 11px;
+  font-weight: 600;
+  background: #f0e4d2;
+  color: #7a6c58;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.menuBadgeActive {
+  background: #e8c15c;
+  color: #3f3115;
+}
+
+.helpBox {
+  margin-top: 20px;
+  background: #ece0cd;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.helpTitle {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.helpText {
+  font-size: 12px;
+  color: #7a6c58;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ================= CONTENT ================= */
+.content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.headTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px;
+}
+
+.desc {
+  font-size: 14px;
+  color: #7a6c58;
+  margin: 0;
+}
+
+.waitingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #c23b2c;
+  background: #fbe7e2;
+  padding: 8px 16px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.waitingDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d8422e;
+}
+
+/* ================= CARD ================= */
+.card {
+  background: #fff;
+  border-radius: 20px;
+  padding: 32px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #ece5da;
+  margin: 24px 0;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #a89a86;
+  margin: 0 0 8px;
+}
+
+.sectionLabel {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #4a4033;
+  margin: 0 0 16px;
+}
+
+.subtleText {
+  font-size: 13px;
+  color: #8a7d6c;
+  margin: 4px 0 0;
+}
+
+/* Invoice head */
+.invoiceHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.invoiceLeft {
+  display: flex;
+  gap: 14px;
+}
+
+.invoiceIcon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #f4ece0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.invoiceTitle {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tagNeutral {
+  font-size: 11px;
+  font-weight: 600;
+  background: #f4ece0;
+  color: #7a6c58;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.countdownBadge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #b8621f;
+  background: #f8ead4;
+  padding: 8px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* Ringkasan */
+.summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.summaryRight {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.productName {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+  max-width: 480px;
+}
+
+.price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #c23b2c;
+  margin: 0;
+}
+
+/* Pay methods */
+.payMethods {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.payBox {
+  border: 1px solid #ece5da;
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.payBoxHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.payBoxTitle {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.tagOutline {
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #ddd0bd;
+  color: #7a6c58;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.vaNumber {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  margin: 0;
+}
+
+.linkButton {
+  margin-top: 14px;
+  border: none;
+  background: none;
+  color: #b8621f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.qrisRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.qrisIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #221c15;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Info box */
+.infoBox {
+  background: #f4ece0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 12.5px;
+  color: #6b5f4e;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+/* Actions */
+.actionRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btnOutline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #ddd0bd;
+  background: #fff;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btnPrimary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: #c23b2c;
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* History */
+.historyHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.historyTitle {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.historyList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #faf6ee;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.checkIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #d7ecd9;
+  color: #1f9d55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.historyInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.historyInvoice {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tagSuccess {
+  font-size: 11px;
+  font-weight: 600;
+  background: #d7ecd9;
+  color: #1f9d55;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.historyRight {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.historyPrice {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.btnOutlineSmall {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid #ddd0bd;
+  background: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 960px) {
+  .wrapper {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+  }
+  .headTop,
+  .invoiceHead,
+  .summaryRow,
+  .payMethods {
+    flex-direction: column;
+  }
+  .payMethods {
+    display: flex;
+  }
+  .summaryRight {
+    text-align: left;
+  }
+  .historyItem {
+    flex-wrap: wrap;
+  }
+  .historyRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
