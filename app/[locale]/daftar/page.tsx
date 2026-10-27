@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "./daftar.module.css";
 import { Link, useRouter } from "@/i18n/routing";
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -123,12 +124,13 @@ export default function LoginPage() {
 
           <div className={styles.socialRow}>
             <button
-              type="button"
-              className={styles.socialButton}
-              aria-label="Masuk dengan Google"
-            >
-              <GoogleIcon />
-            </button>
+  type="button"
+  className={styles.socialButton}
+  aria-label="Masuk dengan Google"
+  onClick={() => signIn("google", { callbackUrl: "/" })} // <-- Mengarahkan ke Google lalu balik ke beranda setelah sukses
+>
+  <GoogleIcon />
+</button>
             <button
               type="button"
               className={styles.socialButton}

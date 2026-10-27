@@ -279,6 +279,26 @@ body {
   font-weight: 700;
 }
 
+/* Styling utama tombol oranye */
+.btn-orange {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-color: #fff; /* Warna latar belakang oranye */
+  color: #581c87; /* Warna teks */
+  padding: 12px 24px;
+  border-radius: 9999px; /* Membuat bentuk kapsul/lonjong */
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease, transform 0.2s ease; /* Efek transisi halus */
+}
+
+/* Styling ketika kursor diarahkan ke tombol (.btn-orange:hover) */
+.btn-orange:hover {
+  background-color:#f59e0b; /* Warna oranye yang sedikit lebih gelap saat di-hover */
+  transform: translateY(-2px); /* Opsional: membuat tombol sedikit terangkat */
+}
 /* ===== Responsive ===== */
 @media (max-width: 760px) {
   .footer-inner { grid-template-columns: 1fr; }

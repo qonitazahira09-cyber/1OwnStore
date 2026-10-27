@@ -292,15 +292,25 @@ export default function Kelola({ onEksporCsv }: KelolaProps) {
   }
 }
 
-  async function handleHapus(id: string) {
-    if (!confirm("Yakin ingin menghapus produk ini?")) return;
-    setProductList((prev) => prev.filter((p) => p.id !== id));
-    try {
-      await fetch(`/api/produk/${id}`, { method: "DELETE" });
-    } catch (err) {
-      console.error("Gagal menghapus produk dari backend:", err);
+async function handleHapus(id: string) {
+  if (!confirm("Yakin ingin menghapus produk ini?")) return;
+
+  try {
+    const res = await fetch(`/api/produk/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      throw new Error("Gagal menghapus produk dari server");
     }
+
+    // Hapus dari state UI hanya jika di server sudah berhasil terhapus
+    setProductList((prev) => prev.filter((p) => String(p.id) !== String(id)));
+  } catch (err) {
+    console.error("Gagal menghapus produk:", err);
+    alert("Terjadi kesalahan saat menghapus produk di server.");
   }
+}
 
   function handleImagesChange(value: string) {
     const urls = value.split("\n").map((s) => s.trim()).filter(Boolean);
@@ -332,55 +342,69 @@ export default function Kelola({ onEksporCsv }: KelolaProps) {
   }
 
   async function handleSubmitForm(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    const payload = {
-      thumbnail: form.thumbnail || "",
-      name: form.name,
-      sku: form.sku,
-      category: form.category,
-      price: Number(form.price),
-      stock: Number(form.stock),
-      unit: form.unit,
-      status: form.status,
-      images: form.images,
-      description: form.description,
-      variants: form.variants,
-      sizes: form.sizes,
-      priceOld: form.priceOld ? Number(form.priceOld) : undefined,
-      discount: form.discount || undefined,
-      badgeTagline: form.badgeTagline || undefined,
-    };
+  const payload = {
+    thumbnail: form.thumbnail || "",
+    name: form.name,
+    sku: form.sku,
+    category: form.category,
+    price: Number(form.price),
+    stock: Number(form.stock),
+    unit: form.unit,
+    status: form.status,
+    images: form.images,
+    description: form.description,
+    variants: form.variants,
+    sizes: form.sizes,
+    priceOld: form.priceOld ? Number(form.priceOld) : undefined,
+    discount: form.discount || undefined,
+    badgeTagline: form.badgeTagline || undefined,
+  };
 
+  try {
     if (editingProduct) {
+      // EDIT PRODUK
+      const res = await fetch(`/api/produk/${editingProduct.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Gagal mengupdate produk di database");
+
+      // Update state lokal setelah backend sukses
       setProductList((prev) =>
         prev.map((p) => (p.id === editingProduct.id ? { ...p, ...payload } : p))
       );
-      try {
-        await fetch(`/api/produk/${editingProduct.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } catch (err) {
-        console.error("Gagal update produk ke backend:", err);
-      }
     } else {
-      const newProduct: Product = { id: Date.now().toString(), ...payload };
-      setProductList((prev) => [...prev, newProduct]);
-      try {
-        await fetch("/api/produk", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } catch (err) {
-        console.error("Gagal tambah produk ke backend:", err);
-      }
+      // TAMBAH PRODUK BARU
+      const res = await fetch("/api/produk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error("Gagal menyimpan produk ke database");
+
+      // Ambil data hasil insert (termasuk ID resmi dari MySQL)
+      const dataBaru = await res.json();
+      
+      // Jika backend hanya kirim { success: true, insertId: ... }, sesuaikan dengan dataBaru.insertId
+      const createdItem: Product = {
+        id: String(dataBaru.insertId || dataBaru.id || Date.now()),
+        ...payload,
+      };
+
+      setProductList((prev) => [createdItem, ...prev]);
     }
 
     setShowModal(false);
+  } catch (err) {
+    console.error("Error submit form:", err);
+    alert("Gagal menyimpan data ke database. Cek terminal / console.");
   }
+}
 
   return (
     <div className={styles.wrapper}>

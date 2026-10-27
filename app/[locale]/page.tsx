@@ -4,14 +4,23 @@ import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/routing";
 import Image from "next/image";
 import "./beranda/beranda.css";
+import { useSession } from "next-auth/react";
+
 
 export default function Home() {
   const t = useTranslations("Home");
+  const { data: session, status } = useSession();
 
 const router = useRouter();
 async function handleAddToCart(e: React.MouseEvent) {
   e.preventDefault();
   e.stopPropagation();
+
+  if (status === "authenticated" || session) {
+      console.log("User sudah login via Google, lanjut tambah ke keranjang");
+      // Tulis logika tambah ke keranjang kamu di sini (misal: router.push("/cart") atau API add to cart)
+      return;
+    }
 
   try {
     const res = await fetch("/api/user/me");
@@ -38,7 +47,7 @@ async function handleAddToCart(e: React.MouseEvent) {
             {t("heroTitleLine1")}<br />
             <span className="accent-text">{t("heroTitleAccent")}</span>
           </h1>
-          <Link href="#favorites" className="btn btn-primary">
+          <Link href="#favorites" className="btn-orange">
             {t("btnLihatKoleksi")}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -189,7 +198,7 @@ async function handleAddToCart(e: React.MouseEvent) {
                 {t("snackboxTitleLine2")}<br /> {t("snackboxTitleLine3")}
               </h2>
               <p>{t("snackboxDesc")}</p>
-              <Link href="paketBundling" className="btn btn-primary">
+              <Link href="/paketBundling" className="btn-orange">
                 {t("btnPilihKotak")}
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <line x1="5" y1="12" x2="19" y2="12" />

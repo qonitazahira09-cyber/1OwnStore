@@ -3,6 +3,7 @@
 import { useState } from "react";
 import styles from "./masuk.module.css";
 import { Link, useRouter } from "@/i18n/routing";
+import { signIn } from "next-auth/react"; // <-- 1. Import signIn dari next-auth/react
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,30 +16,30 @@ export default function LoginPage() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  setLoading(true);
-  setMessage("");
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
 
-  try {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.message || "Gagal masuk");
+      if (!res.ok) {
+        throw new Error(data.message || "Gagal masuk");
+      }
+
+      setMessage("Berhasil masuk!");
+      router.push("/"); // arahkan ke beranda setelah berhasil
+    } catch (err: any) {
+      setMessage(err.message || "Gagal terhubung ke server");
+    } finally {
+      setLoading(false);
     }
-
-    setMessage("Berhasil masuk!");
-    router.push("/"); // arahkan ke beranda setelah berhasil
-  } catch (err: any) {
-    setMessage(err.message || "Gagal terhubung ke server");
-  } finally {
-    setLoading(false);
   }
-}
 
   return (
     <div className={styles.page}>
@@ -90,7 +91,9 @@ export default function LoginPage() {
               required
             />
 
-            <p className={styles.signupTextL}>Lupa Password?</p>
+            <Link href="/lupaPw" className={styles.signupTextL}>
+            Lupa Password?
+            </Link>
 
             <button
               type="submit"
@@ -108,10 +111,12 @@ export default function LoginPage() {
           </div>
 
           <div className={styles.socialRow}>
+            {/* 2. Tambahkan onClick untuk memicu NextAuth Google Sign In */}
             <button
               type="button"
               className={styles.socialButton}
               aria-label="Masuk dengan Google"
+              onClick={() => signIn("google", { callbackUrl: "/" })}
             >
               <GoogleIcon />
             </button>

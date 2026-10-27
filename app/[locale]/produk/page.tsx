@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Link, useRouter } from "@/i18n/routing";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
 
 // Import CSS khusus detail produk
 import "./produk.css";
@@ -198,6 +199,7 @@ type PageProps = {
 
 export default function ProdukPage({}: PageProps) {
   const product: ProductDetailData = DEFAULT_PRODUCT;
+  const { data: session, status } = useSession();
 
   // States Interaktif
   const [selectedImg, setSelectedImg] = useState(product.images[0] || "/foto/mix.jpg");
@@ -231,6 +233,11 @@ export default function ProdukPage({}: PageProps) {
 
   async function handleBeli(e: React.MouseEvent) {
     e.preventDefault();
+
+    if (status === "authenticated" || session) {
+      router.push("/checkout");
+      return;
+    }
 
     try {
       const res = await fetch("/api/user/me");

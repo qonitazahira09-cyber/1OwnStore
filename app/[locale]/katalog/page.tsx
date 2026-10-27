@@ -12,11 +12,15 @@ interface Produk {
 }
 
 export default async function KatalogPage() {
-  const [rows] = await db.query(
+  const result = await db.query(
     "SELECT id, name, price, thumbnail, category FROM produk ORDER BY created_at DESC"
   );
-  const PRODUCTS = rows as Produk[];
+  
+// Pastikan result tidak null/undefined dan ambil array datanya (biasanya di indeks ke-0 jika pakai mysql2)
+const [rows] = await db.query("...");
 
+// Cek apakah rows benar-benar ada isinya sebelum di-casting
+const PRODUCTS = (rows || []) as Produk[];
   return (
     <main>
       <section className="catalog-hero">

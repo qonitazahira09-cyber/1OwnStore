@@ -6,6 +6,7 @@ import { getMessages } from "next-intl/server";
 
 import Header from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SessionProviderWrapper from "@/components/SessionProviderWrapper";
 
 interface LocaleLayoutProps {
   children: React.ReactNode;
@@ -22,11 +23,13 @@ export default async function LocaleLayout({
   return (
     <html lang={locale}>
       <body>
+        <SessionProviderWrapper>
         <NextIntlClientProvider messages={messages}>
           <Header />
           <main>{children}</main>
           <Footer />
         </NextIntlClientProvider>
+        </SessionProviderWrapper>
       </body>
     </html>
   );

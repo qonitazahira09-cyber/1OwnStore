@@ -3,13 +3,22 @@
 import { useTranslations } from "next-intl";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Link, useRouter } from "@/i18n/routing";
+import { useSession } from "next-auth/react";
+
+
 
 export default function Navbar() {
   const t = useTranslations("Navbar");
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   async function handleProtectedNav(e: React.MouseEvent, destination: string) {
     e.preventDefault();
+
+    if (status === "authenticated" || session) {
+      router.push(destination);
+      return;
+    }
 
     try {
       const res = await fetch("/api/user/me");
