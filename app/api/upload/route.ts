@@ -1,30 +1,41 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { supabase } from "@/lib/supabase";
 
-export async function POST(request: Request) {
-  try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
+const ALLOWED: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
-    if (!file) {
-      return NextResponse.json({ message: "Tidak ada file dikirim" }, { status: 400 });
+export async function POST(req: Request) {
+  // TODO: cek session admin di sini
+  const form = await req.formData();
+  const files = form.getAll("files").filter((f): f is File => f instanceof File);
+
+  if (files.length === 0) {
+    return NextResponse.json({ message: "Tidak ada file" }, { status: 400 });
+  }
+
+  const urls: string[] = [];
+  for (const file of files) {
+    const ext = ALLOWED[file.type];
+    if (!ext) {
+      return NextResponse.json({ message: `Format ${file.name} tidak didukung (pakai JPG/PNG/WebP)` }, { status: 400 });
+    }
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ message: `${file.name} lebih dari 5 MB` }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("produk")
+      .upload(path, Buffer.from(await file.arrayBuffer()), { contentType: file.type });
 
-    const ext = file.name.split(".").pop();
-    const filename = `${Date.now()}.${ext}`;
+    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true }); // bikin folder kalau belum ada
-
-    await writeFile(path.join(uploadDir, filename), buffer);
-
-    return NextResponse.json({ url: `/uploads/${filename}` });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ message: "Gagal upload file" }, { status: 500 });
+    urls.push(supabase.storage.from("produk").getPublicUrl(path).data.publicUrl);
   }
+
+  return NextResponse.json({ urls });
 }

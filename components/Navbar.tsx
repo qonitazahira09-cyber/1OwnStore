@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Link, useRouter } from "@/i18n/routing";
@@ -11,6 +13,29 @@ export default function Navbar() {
   const t = useTranslations("Navbar");
   const router = useRouter();
   const { data: session, status } = useSession();
+
+  const pathname = usePathname();
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    async function loadCount() {
+      try {
+        const res = await fetch("/api/keranjang", { cache: "no-store" });
+        if (!res.ok) {
+          setCartCount(0);
+          return;
+        }
+        const data = await res.json();
+        setCartCount(data.jumlahItem ?? 0);
+      } catch {
+        setCartCount(0);
+      }
+    }
+
+    loadCount();
+    window.addEventListener("cart-updated", loadCount);
+    return () => window.removeEventListener("cart-updated", loadCount);
+  }, [pathname]);
 
   async function handleProtectedNav(e: React.MouseEvent, destination: string) {
     e.preventDefault();
@@ -71,7 +96,9 @@ export default function Navbar() {
               <circle cx="20" cy="21" r="1" />
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
-            <span className="cart-badge">2</span>
+            {cartCount > 0 && (
+  <span className="cart-badge">{cartCount > 99 ? "99+" : cartCount}</span>
+)}
           </Link>
 
           <Link

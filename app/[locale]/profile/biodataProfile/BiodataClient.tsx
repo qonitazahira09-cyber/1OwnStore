@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sprofile from "@/components/Sprofile";
 import styles from "./bidataPro.module.css";
 import { Link } from "@/i18n/routing";
 
+
 // ==== TYPES ====
 interface Address {
+  id?: number;
   label: string;
   isPrimary?: boolean;
   receiver: string;
@@ -17,43 +19,37 @@ interface User {
   id: number;
   nama: string;
   email: string;
-  whatsapp: string;
+  nomor_telpon: string;
   email_verified: boolean;
 }
 
-// ==== DUMMY DATA alamat awal ====
-const initialAddresses: Address[] = [
-  {
-    label: "Rumah Utama (Malang)",
-    isPrimary: true,
-    receiver: "Budi Santoso (+62 812-3456-7890)",
-    fullAddress:
-      "Jl. Raya Langsep No. 45, RT 02 / RW 05, Kel. Bareng, Kec. Klojen, Kota Malang, Jawa Timur 65116",
-  },
-  {
-    label: "Villa Keluarga Batu",
-    receiver: "Budi Santoso (+62 812-3456-7890)",
-    fullAddress: "Jl. Oro-Oro Ombo No. 88, Kec. Batu, Kota Batu, Jawa Timur 65316",
-  },
-];
 
-export default function BiodataClient({ user }: { user: User }) {
+  export default function BiodataClient({ user }: { user: User }) {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [form, setForm] = useState({
-    nama: user.nama,
-    whatsapp: user.whatsapp,
+    nama: user.nama || "",
+    nomor_telpon: user.nomor_telpon || "",
   });
 
-  // ==== State alamat (dummy, disimpan di memori browser saja) ====
-  const [addresses, setAddresses] = useState<Address[]>(initialAddresses);
+  // ==== State alamat (sekarang dari database) ====
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [addressForm, setAddressForm] = useState({
     label: "",
     receiver: "",
     fullAddress: "",
   });
+
+  async function loadAddresses() {
+    const res = await fetch("/api/user/alamat");
+    if (res.ok) setAddresses(await res.json());
+  }
+
+  useEffect(() => {
+    loadAddresses();
+  }, []);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -65,33 +61,35 @@ export default function BiodataClient({ user }: { user: User }) {
     setAddressForm({ ...addressForm, [e.target.name]: e.target.value });
   }
 
-  function handleAddAddress(e: React.FormEvent) {
+  async function handleAddAddress(e: React.FormEvent) {
     e.preventDefault();
 
     if (!addressForm.label || !addressForm.receiver || !addressForm.fullAddress) {
-      return; // jangan submit kalau ada field kosong
+      return;
     }
 
-    const newAddress: Address = {
-      label: addressForm.label,
-      receiver: addressForm.receiver,
-      fullAddress: addressForm.fullAddress,
-      isPrimary: addresses.length === 0, // alamat pertama otomatis jadi utama
-    };
+    const res = await fetch("/api/user/alamat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(addressForm),
+    });
 
-    setAddresses([...addresses, newAddress]);
-    setAddressForm({ label: "", receiver: "", fullAddress: "" });
-    setShowAddressModal(false); // tutup modal, langsung balik ke halaman biodata dengan list terupdate
+    if (res.ok) {
+      setAddressForm({ label: "", receiver: "", fullAddress: "" });
+      setShowAddressModal(false);
+      loadAddresses();
+    }
   }
 
-  function handleSetPrimary(index: number) {
-    setAddresses(
-      addresses.map((addr, i) => ({
-        ...addr,
-        isPrimary: i === index,
-      }))
-    );
+  async function handleSetPrimary(id?: number) {
+    await fetch("/api/user/alamat", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    loadAddresses();
   }
+
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -157,7 +155,7 @@ export default function BiodataClient({ user }: { user: User }) {
             <div className={styles.fieldGrid}>
               <div className={styles.field}>
                 <p className={styles.label}>Nama Lengkap</p>
-                <p className={styles.value}>{user.nama}</p>
+                <p className={styles.value}>{user.nama || "-"}</p>
               </div>
 
               <div className={styles.field}>
@@ -165,16 +163,28 @@ export default function BiodataClient({ user }: { user: User }) {
                 <p className={styles.value}>
                   {user.email}{" "}
                   {user.email_verified && (
-                    <span className={styles.tagStatus}>• Terverifikasi</span>
+                    <span className={styles.tagStatus}>Terverifikasi</span>
                   )}
                 </p>
               </div>
 
               <div className={styles.field}>
-                <p className={styles.label}>Nomor WhatsApp / HP</p>
+                <p className={styles.label}>Nomor Telepon / HP</p>
                 <p className={styles.value}>
-                  {user.whatsapp}{" "}
-                  <span className={styles.tagStatus}>✓ Terhubung</span>
+                  {user.nomor_telpon ? (
+  <>
+    {user.nomor_telpon}{" "}
+    <span className={styles.tagStatus}>✓ Terhubung</span>
+  </>
+) : (
+  <button
+    type="button"
+    className={styles.linkButton}
+    onClick={() => setIsEditing(true)}
+  >
+    + Tambah nomor
+  </button>
+)}
                 </p>
               </div>
             </div>
@@ -198,11 +208,11 @@ export default function BiodataClient({ user }: { user: User }) {
               </div>
 
               <div className={styles.field}>
-                <p className={styles.label}>Nomor WhatsApp / HP</p>
+                <p className={styles.label}>Nomor Telepon / HP</p>
                 <input
                   type="text"
-                  name="whatsapp"
-                  value={form.whatsapp}
+                  name="nomor_telpon"
+                  value={form.nomor_telpon}
                   onChange={handleChange}
                   className={styles.value}
                   style={{ border: "1px solid #ccc", borderRadius: 8, padding: 4 }}
@@ -230,9 +240,14 @@ export default function BiodataClient({ user }: { user: User }) {
           </div>
 
           <div className={styles.addressList}>
+            {addresses.length === 0 && (
+    <p className={styles.value}>
+      Belum ada alamat. Klik "+ Tambah Alamat Baru" untuk menambahkan.
+    </p>
+  )}
             {addresses.map((addr, index) => (
               <div
-                key={addr.label + index}
+                key={addr.id ?? addr.label + index}
                 className={`${styles.addressCard} ${
                   addr.isPrimary ? styles.addressCardPrimary : ""
                 }`}
@@ -248,7 +263,7 @@ export default function BiodataClient({ user }: { user: User }) {
                         <button
                           type="button"
                           className={styles.linkButtonMuted}
-                          onClick={() => handleSetPrimary(index)}
+                          onClick={() => handleSetPrimary(addr.id)}
                         >
                           Jadikan Utama
                         </button>

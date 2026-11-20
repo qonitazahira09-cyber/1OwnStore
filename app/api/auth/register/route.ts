@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { db } from "@/lib/db";
+import { supabase } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
@@ -14,12 +14,22 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Cek apakah email sudah terdaftar
-    const [existing]: any = await db.query(
-      "SELECT id FROM users WHERE email = ?",
-      [email]
-    );
-    if (existing.length > 0) {
+    // 2. Cek apakah email sudah terdaftar (Metode Supabase)
+    const { data: existingUser, error: checkError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Supabase Check Error:", checkError);
+      return NextResponse.json(
+        { message: "Terjadi kesalahan server" },
+        { status: 500 }
+      );
+    }
+
+    if (existingUser) {
       return NextResponse.json(
         { message: "Email sudah terdaftar" },
         { status: 409 }
@@ -29,11 +39,25 @@ export async function POST(req: Request) {
     // 3. Hash password (jangan pernah simpan password polos)
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 4. Simpan ke database
-    await db.query(
-      "INSERT INTO users (nama, email, whatsapp, password) VALUES (?, ?, ?, ?)",
-      [nama, email, whatsapp, hashedPassword]
-    );
+    // 4. Simpan ke database Supabase (Sesuaikan nama kolom 'nomor_telpon' dengan tabel Supabase kamu)
+    const { error: insertError } = await supabase
+      .from("users")
+      .insert([
+        {
+          nama: nama,
+          email: email,
+          nomor_telpon: whatsapp, // Disesuaikan dengan kolom tabel supabase kamu sebelumnya
+          password: hashedPassword,
+        },
+      ]);
+
+    if (insertError) {
+      console.error("Supabase Insert Error:", insertError);
+      return NextResponse.json(
+        { message: "Gagal mendaftarkan user" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { message: "Pendaftaran berhasil" },

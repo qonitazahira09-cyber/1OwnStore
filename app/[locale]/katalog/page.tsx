@@ -1,26 +1,150 @@
+// app/[locale]/katalog/page.tsx
 import { Link } from "@/i18n/routing";
 import Image from "next/image";
-import { db } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
+import { rowToProduct } from "@/lib/produk";
 import "./katalog.css";
 
-interface Produk {
-  id: number;
-  name: string;
-  price: number;
-  thumbnail: string;
-  category: string;
-}
+export const dynamic = "force-dynamic";
 
-export default async function KatalogPage() {
-  const result = await db.query(
-    "SELECT id, name, price, thumbnail, category FROM produk ORDER BY created_at DESC"
+const CATEGORIES = ["Minuman", "Keripik", "Bumbu Pecel"];
+const RECENT_DAYS = 30;
+const MIN_DISCOUNT = 25; // persen, ubah di sini kalau batasnya berubah
+
+// Hitung persentase diskon dari baris mentah Supabase
+const discountPercent = (row: any): number => {
+  // Utama: kolom discount bertipe text, misal "25%" atau "11%"
+  const fromText = parseFloat(
+    String(row.discount ?? "").replace("%", "").replace(",", ".")
   );
-  
-// Pastikan result tidak null/undefined dan ambil array datanya (biasanya di indeks ke-0 jika pakai mysql2)
-const [rows] = await db.query("...");
+  if (!isNaN(fromText)) return fromText;
 
-// Cek apakah rows benar-benar ada isinya sebelum di-casting
-const PRODUCTS = (rows || []) as Produk[];
+  // Cadangan: kalau discount kosong, hitung dari price_old dan price
+  const old = Number(row.price_old);
+  const price = Number(row.price);
+  if (old > price && old > 0) return ((old - price) / old) * 100;
+
+  return 0;
+};
+
+/* ---------- Ikon ---------- */
+const Icon = ({ children }: { children: React.ReactNode }) => (
+  <svg
+    className="side-icon"
+    width="22"
+    height="22"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    {children}
+  </svg>
+);
+
+const ICONS: Record<string, React.ReactNode> = {
+  semua: (
+    <Icon>
+      <path d="m7.5 4.27 9 5.15" />
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="m3.3 7 8.7 5 8.7-5" />
+      <path d="M12 22V12" />
+    </Icon>
+  ),
+  Minuman: (
+    <Icon>
+      <path d="M10 2v2" />
+      <path d="M14 2v2" />
+      <path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1" />
+      <path d="M6 2v2" />
+    </Icon>
+  ),
+  Keripik: (
+    <Icon>
+      <path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5" />
+      <path d="M8.5 8.5v.01" />
+      <path d="M16 15.5v.01" />
+      <path d="M12 12v.01" />
+      <path d="M11 17v.01" />
+      <path d="M7 14v.01" />
+    </Icon>
+  ),
+  "Bumbu Pecel": (
+    <Icon>
+      <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+      <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+    </Icon>
+  ),
+  terbaru: (
+    <Icon>
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
+    </Icon>
+  ),
+  diskon: (
+    <Icon>
+      <line x1="19" x2="5" y1="5" y2="19" />
+      <circle cx="6.5" cy="6.5" r="2.5" />
+      <circle cx="17.5" cy="17.5" r="2.5" />
+    </Icon>
+  ),
+};
+
+export default async function KatalogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ kategori?: string; filter?: string }>;
+}) {
+  const { kategori, filter } = await searchParams;
+
+  const { data, error } = await supabase
+    .from("produk")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) console.error("Gagal memuat katalog:", error.message);
+
+  const rows = data ?? [];
+  const ALL_PRODUCTS = rows.map(rowToProduct);
+
+  // id produk yang dibuat dalam RECENT_DAYS hari terakhir
+  const limit = Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000;
+  const recentIds = new Set(
+    rows
+      .filter((r: any) => new Date(r.created_at).getTime() >= limit)
+      .map((r: any) => String(r.id))
+  );
+
+  // id produk dengan diskon >= MIN_DISCOUNT
+  const discountedIds = new Set(
+    rows
+      .filter((r: any) => discountPercent(r) >= MIN_DISCOUNT)
+      .map((r: any) => String(r.id))
+  );
+
+  const norm = (s: string) => (s ?? "").trim().toLowerCase();
+
+  const activeFilter =
+    filter === "terbaru" || filter === "diskon" ? filter : undefined;
+  const activeCategory = activeFilter
+    ? undefined
+    : CATEGORIES.find((c) => norm(c) === norm(kategori ?? ""));
+
+  let PRODUCTS = ALL_PRODUCTS;
+  if (activeFilter === "terbaru") {
+    PRODUCTS = ALL_PRODUCTS.filter((p) => recentIds.has(String(p.id)));
+  } else if (activeFilter === "diskon") {
+    PRODUCTS = ALL_PRODUCTS.filter((p) => discountedIds.has(String(p.id)));
+  } else if (activeCategory) {
+    PRODUCTS = ALL_PRODUCTS.filter(
+      (p) => norm(p.category) === norm(activeCategory)
+    );
+  }
+
+  const isAll = !activeCategory && !activeFilter;
+
   return (
     <main>
       <section className="catalog-hero">
@@ -47,77 +171,55 @@ const PRODUCTS = (rows || []) as Produk[];
           <div className="shop-layout">
             <aside className="shop-sidebar">
               <h3>Kategori</h3>
+
+              {/* Kategori utama */}
               <ul className="category-list">
-                <li className="active">
-                  <Link href="#">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-                      <path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                    </svg>
-                    Semua Produk
-                  </Link>
-                  <span className="count-badge">{PRODUCTS.length}</span>
-                </li>
-                <li>
-                  <Link href="#">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="m17 22 1.664-2.496a2 2 0 0 0 .336-1.11V5.606a2 2 0 0 0-.336-1.11L17 2" />
-                      <path d="M18 22H6" />
-                      <path d="M18 2H6" />
-                      <path d="M5 17h14" />
-                      <path d="M5 7h14" />
-                      <path d="m7 22-1.664-2.496A2 2 0 0 0 5 18.394V5.606a2 2 0 0 0 .336-1.11L7 2" />
-                    </svg>
-                    Minuman
+                <li className={isAll ? "active" : ""}>
+                  <Link href="/katalog">
+                    {ICONS.semua}
+                    <span className="side-label">Semua Produk</span>
+                    {isAll && <span className="count-badge">{PRODUCTS.length}</span>}
                   </Link>
                 </li>
-                <li>
-                  <Link href="#">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M11 17h.01" />
-                      <path d="M11.496 2c.324-.016.558.292.529.615a4 4 0 0 0 4.235 4.368.713.713 0 0 1 .758.757 4 4 0 0 0 4.366 4.237c.323-.03.63.204.614.527a10 10 0 0 1-2.915 6.566A1 1 0 1 1 4.93 4.918 10 10 0 0 1 11.496 2" />
-                      <path d="M12 12h.01" />
-                      <path d="M16 16h.01" />
-                      <path d="M16 3h.01" />
-                      <path d="M21 4h.01" />
-                      <path d="M21 8h.01" />
-                      <path d="M7 14h.01" />
-                      <path d="M9 8h.01" />
-                    </svg>
-                    Kripik
+
+                {CATEGORIES.map((cat) => {
+                  const active = activeCategory === cat;
+                  return (
+                    <li key={cat} className={active ? "active" : ""}>
+                      <Link href={`/katalog?kategori=${encodeURIComponent(cat)}`}>
+                        {ICONS[cat]}
+                        <span className="side-label">{cat}</span>
+                        {active && <span className="count-badge">{PRODUCTS.length}</span>}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              {/* Garis tipis pemisah */}
+              <div className="sidebar-divider" />
+
+              {/* Filter tambahan */}
+              <ul className="category-list extra-list">
+                <li className={activeFilter === "terbaru" ? "active" : ""}>
+                  <Link href="/katalog?filter=terbaru">
+                    {ICONS.terbaru}
+                    <span className="side-label">Produk Terbaru</span>
+                    {activeFilter === "terbaru" && (
+                      <span className="count-badge">{PRODUCTS.length}</span>
+                    )}
                   </Link>
                 </li>
-                <li>
-                  <Link href="#">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                      <rect width="18" height="18" x="3" y="3" rx="2" />
-                    </svg>
-                    Bumbu Pecel
+                <li className={activeFilter === "diskon" ? "active" : ""}>
+                  <Link href="/katalog?filter=diskon">
+                    {ICONS.diskon}
+                    <span className="side-label">Diskon</span>
+                    {activeFilter === "diskon" && (
+                      <span className="count-badge">{PRODUCTS.length}</span>
+                    )}
                   </Link>
                 </li>
               </ul>
-
-              <div className="filter-list">
-                <div className="filter-item">
-                  <span>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v6l4 2" />
-                    </svg>
-                    Produk Terbaru
-                  </span>
-                </div>
-                <div className="filter-item">
-                  <span>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="19" x2="5" y1="5" y2="19" />
-                      <circle cx="6.5" cy="6.5" r="2.5" />
-                      <circle cx="17.5" cy="17.5" r="2.5" />
-                    </svg>
-                    Promo Spesial
-                  </span>
-                </div>
-              </div>
             </aside>
 
             <div className="shop-main">
@@ -128,7 +230,7 @@ const PRODUCTS = (rows || []) as Produk[];
                       <span className="tag">{item.category}</span>
                       <Link href={`/katalog/${item.id}`}>
                         <Image
-                          src={item.thumbnail || "/foto/placeholder.jpg"}
+                          src={item.thumbnail || item.images[0] || "/foto/placeholder.jpg"}
                           alt={item.name}
                           width={300}
                           height={200}
@@ -136,9 +238,7 @@ const PRODUCTS = (rows || []) as Produk[];
                       </Link>
                     </div>
                     <div className="shop-info">
-                      <h3>
-                        <Link href={`/katalog/${item.id}`}>{item.name}</Link>
-                      </h3>
+                      <h3><Link href={`/katalog/${item.id}`}>{item.name}</Link></h3>
                       <div className="rating">
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="#F0801C" stroke="none">
                           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
@@ -146,9 +246,7 @@ const PRODUCTS = (rows || []) as Produk[];
                         4.9 <span className="review-count">(1.2k Ulasan)</span>
                       </div>
                       <div className="shop-bottom">
-                        <span className="shop-price">
-                          Rp {item.price.toLocaleString("id-ID")}
-                        </span>
+                        <span className="shop-price">Rp {item.price.toLocaleString("id-ID")}</span>
                         <button className="add-btn" aria-label="Tambah ke keranjang">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                             <circle cx="9" cy="21" r="1" />
@@ -160,7 +258,7 @@ const PRODUCTS = (rows || []) as Produk[];
                     </div>
                   </article>
                 ))}
-                {PRODUCTS.length === 0 && <p>Belum ada produk.</p>}
+                {PRODUCTS.length === 0 && <p>Belum ada produk untuk filter ini.</p>}
               </div>
             </div>
           </div>

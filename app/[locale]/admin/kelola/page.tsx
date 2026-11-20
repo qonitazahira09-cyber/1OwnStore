@@ -2,9 +2,12 @@
 
 import styles from "./kelola.module.css";
 import React, { useMemo, useState, useEffect } from "react";
+import type { Product, StockStatus } from "@/lib/produk";
+
+export type { Product, StockStatus };
 
 /* ------------------------------------------------------------------ */
-/*  Helper & Utilities                                                */
+/*  Helper                                                            */
 /* ------------------------------------------------------------------ */
 
 function cx(...classes: Array<string | false | undefined>) {
@@ -13,160 +16,130 @@ function cx(...classes: Array<string | false | undefined>) {
 
 const formatRupiah = (value: number) => "Rp " + value.toLocaleString("id-ID");
 
+const statusStyle: Record<StockStatus, string> = {
+  Tersedia: styles.badgeOk || "",
+  "Stok Menipis": styles.badgeWarn || "",
+  Habis: styles.badgeOff || "",
+};
+
+const digits = (s: string) => s.replace(/\D/g, "");
+const fmtInput = (s: string) => {
+  const d = digits(s);
+  return d ? Number(d).toLocaleString("id-ID") : "";
+};
+
 /* ------------------------------------------------------------------ */
 /*  Icons                                                             */
 /* ------------------------------------------------------------------ */
 
+const Svg = ({ size = 15, children }: { size?: number; children: React.ReactNode }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">{children}</svg>
+);
+const S = { stroke: "currentColor", strokeLinecap: "round", strokeLinejoin: "round" } as const;
+
 const IconTag = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-    <path
-      d="M20 12.5 12.5 20a2 2 0 0 1-2.8 0l-6.7-6.7a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h6.9c.5 0 1 .2 1.4.6l6.7 6.7a2 2 0 0 1 .1 2.2Z"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinejoin="round"
-    />
+  <Svg size={14}>
+    <path d="M20 12.5 12.5 20a2 2 0 0 1-2.8 0l-6.7-6.7a2 2 0 0 1-.6-1.4V5a2 2 0 0 1 2-2h6.9c.5 0 1 .2 1.4.6l6.7 6.7a2 2 0 0 1 .1 2.2Z" {...S} strokeWidth="1.7" />
     <circle cx="7.5" cy="7.5" r="1.3" fill="currentColor" />
-  </svg>
+  </Svg>
 );
-
 const IconDownload = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-    <path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
+  <Svg>
+    <path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5" {...S} strokeWidth="1.8" />
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" {...S} strokeWidth="1.8" />
+  </Svg>
 );
-
 const IconPlus = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-  </svg>
+  <Svg><path d="M12 5v14M5 12h14" {...S} strokeWidth="2.2" /></Svg>
 );
-
 const IconBag = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M6 8h12l-1 12H7L6 8Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    <path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" strokeWidth="1.7" />
-  </svg>
+  <Svg size={18}>
+    <path d="M6 8h12l-1 12H7L6 8Z" {...S} strokeWidth="1.7" />
+    <path d="M9 8V6a3 3 0 0 1 6 0v2" {...S} strokeWidth="1.7" />
+  </Svg>
 );
-
 const IconCheck = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="m5 13 4.5 4.5L19 8" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <Svg size={18}><path d="m5 13 4.5 4.5L19 8" {...S} strokeWidth="2.2" /></Svg>
 );
-
 const IconAlert = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M12 3 2 20h20L12 3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    <path d="M12 10v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+  <Svg size={18}>
+    <path d="M12 3 2 20h20L12 3Z" {...S} strokeWidth="1.7" />
+    <path d="M12 10v4" {...S} strokeWidth="1.8" />
     <circle cx="12" cy="17" r="1" fill="currentColor" />
-  </svg>
+  </Svg>
 );
-
 const IconCartOff = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-    <path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H6" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+  <Svg size={18}>
+    <path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 7H6" {...S} strokeWidth="1.7" />
     <circle cx="9.5" cy="20.5" r="1.3" fill="currentColor" />
     <circle cx="17.5" cy="20.5" r="1.3" fill="currentColor" />
-  </svg>
+  </Svg>
 );
-
 const IconSearch = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+  <Svg size={16}>
     <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8" />
-    <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-  </svg>
+    <path d="m20 20-3.5-3.5" {...S} strokeWidth="1.8" />
+  </Svg>
 );
-
 const IconEdit = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-    <path d="m16.5 3.5 4 4L8 20H4v-4L16.5 3.5Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-  </svg>
+  <Svg><path d="m16.5 3.5 4 4L8 20H4v-4L16.5 3.5Z" {...S} strokeWidth="1.7" /></Svg>
 );
-
 const IconTrash = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-    <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7h12Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
+  <Svg>
+    <path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7h12Z" {...S} strokeWidth="1.7" />
+  </Svg>
 );
 
 /* ------------------------------------------------------------------ */
-/*  Types & Initial Sample Data                                       */
+/*  Form state                                                        */
 /* ------------------------------------------------------------------ */
 
-export type StockStatus = "Tersedia" | "Stok Menipis" | "Habis";
+interface AccordionForm { title: string; content: string; tags: string } // tags = "a, b, c"
 
-export interface Product {
-  id: string;
-  thumbnail?: string;
+const DEFAULT_ACCORDIONS: AccordionForm[] = [
+  { title: "Deskripsi & Keunggulan Produk", content: "", tags: "" },
+  { title: "Komposisi & Nilai Nutrisi Alami", content: "", tags: "" },
+  { title: "Legalitas, P-IRT & Sertifikasi Halal", content: "", tags: "" },
+  { title: "Panduan Penyimpanan & Penyajian", content: "", tags: "" },
+];
+
+interface FormState {
+  thumbnail: string;
   name: string;
   sku: string;
   category: string;
-  price: number;
-  stock: number;
+  price: string;
+  stock: string;
   unit: string;
   status: StockStatus;
-  images?: string[];
-  description?: string;
-  variants?: { name: string; icon: string }[];
-  sizes?: { label: string; price: number }[];
-  priceOld?: number;
-  discount?: string;
-  badgeTagline?: string;
+  images: string[];
+  description: string;
+  variants: { name: string; icon: string }[];
+  sizes: { label: string; price: number }[];
+  accordions: AccordionForm[];
+  priceOld: string;
+  discount: string;
+  badgeTagline: string;
 }
 
-const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: "1",
-    thumbnail: "",
-    name: "Keripik Apel Manalagi 200g",
-    sku: "MLG-APL-01",
-    category: "Keripik",
-    price: 35000,
-    stock: 142,
-    unit: "pcs",
-    status: "Tersedia",
-  },
-  {
-    id: "2",
-    thumbnail: "",
-    name: "Sari Apel Murni Brosem 330ml",
-    sku: "MLG-BRS-02",
-    category: "Minuman",
-    price: 50000,
-    stock: 28,
-    unit: "karton",
-    status: "Tersedia",
-  },
-  {
-    id: "3",
-    thumbnail: "",
-    name: "Keripik Tempe Sanan Daun Jeruk 250g",
-    sku: "MLG-TMP-03",
-    category: "Keripik",
-    price: 22500,
-    stock: 6,
-    unit: "pcs",
-    status: "Stok Menipis",
-  },
-  {
-    id: "4",
-    thumbnail: "",
-    name: "Bumbu Pecel Malangan",
-    sku: "MLG-PIA-04",
-    category: "Bumbu",
-    price: 48000,
-    stock: 15,
-    unit: "box",
-    status: "Tersedia",
-  },
-];
-
-const statusStyle: Record<StockStatus, string> = {
-  Tersedia: styles.badgeOk,
-  "Stok Menipis": styles.badgeWarn,
-  Habis: styles.badgeOff,
-};
+const emptyForm = (): FormState => ({
+  thumbnail: "",
+  name: "",
+  sku: "",
+  category: "Keripik",
+  price: "",
+  stock: "",
+  unit: "pcs",
+  status: "Tersedia",
+  images: [],
+  description: "",
+  variants: [],
+  sizes: [],
+  accordions: DEFAULT_ACCORDIONS.map((a) => ({ ...a })),
+  priceOld: "",
+  discount: "",
+  badgeTagline: "",
+});
 
 /* ------------------------------------------------------------------ */
 /*  Komponen Utama                                                    */
@@ -177,7 +150,11 @@ interface KelolaProps {
 }
 
 export default function Kelola({ onEksporCsv }: KelolaProps) {
-  const [productList, setProductList] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [productList, setProductList] = useState<Product[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [selectedStatus, setSelectedStatus] = useState("Semua");
@@ -185,23 +162,7 @@ export default function Kelola({ onEksporCsv }: KelolaProps) {
 
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [form, setForm] = useState({
-    thumbnail: "",
-    name: "",
-    sku: "",
-    category: "Keripik",
-    price: "",
-    stock: "",
-    unit: "pcs",
-    status: "Tersedia" as StockStatus,
-    images: [] as string[],
-    description: "",
-    variants: [] as { name: string; icon: string }[],
-    sizes: [] as { label: string; price: number }[],
-    priceOld: "",
-    discount: "",
-    badgeTagline: "",
-  });
+  const [form, setForm] = useState<FormState>(emptyForm());
 
   useEffect(() => {
     fetch("/api/produk")
@@ -209,64 +170,41 @@ export default function Kelola({ onEksporCsv }: KelolaProps) {
         if (!res.ok) throw new Error("Gagal mengambil data");
         return res.json();
       })
-      .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setProductList(data);
-        }
-      })
-      .catch((err) => console.log("Menampilkan data awal (mock):", err));
+      .then((data) => setProductList(Array.isArray(data) ? data : []))
+      .catch((err) => console.error("Gagal memuat produk:", err))
+      .finally(() => setLoadingData(false));
   }, []);
 
-  const stats = useMemo(() => {
-    const total = productList.length;
-    const aman = productList.filter((p) => p.status === "Tersedia").length;
-    const menipis = productList.filter((p) => p.status === "Stok Menipis").length;
-    const habis = productList.filter((p) => p.status === "Habis").length;
-    return { total, aman, menipis, habis };
-  }, [productList]);
+  const stats = useMemo(() => ({
+    total: productList.length,
+    aman: productList.filter((p) => p.status === "Tersedia").length,
+    menipis: productList.filter((p) => p.status === "Stok Menipis").length,
+    habis: productList.filter((p) => p.status === "Habis").length,
+  }), [productList]);
 
   const filtered = useMemo(() => {
+    const q = search.toLowerCase();
     return productList.filter((p) => {
-      const matchSearch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.sku.toLowerCase().includes(search.toLowerCase());
-      const matchCategory =
-        selectedCategory === "Semua" || p.category === selectedCategory;
-      const matchStatus =
-        selectedStatus === "Semua" || p.status === selectedStatus;
+      const matchSearch = p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q);
+      const matchCategory = selectedCategory === "Semua" || p.category === selectedCategory;
+      const matchStatus = selectedStatus === "Semua" || p.status === selectedStatus;
       return matchSearch && matchCategory && matchStatus;
     });
   }, [productList, search, selectedCategory, selectedStatus]);
 
-  const categories = useMemo(() => {
-    const unique = Array.from(new Set(productList.map((p) => p.category)));
-    return ["Semua", ...unique];
-  }, [productList]);
+  const categories = useMemo(
+    () => ["Semua", ...Array.from(new Set(productList.map((p) => p.category)))],
+    [productList]
+  );
 
+  /* ---------- buka modal ---------- */
   function handleBukaTambah() {
     setEditingProduct(null);
-    setForm({
-      thumbnail: "",
-      name: "",
-      sku: "",
-      category: "Keripik",
-      price: "",
-      stock: "",
-      unit: "pcs",
-      status: "Tersedia",
-      images: [],
-      description: "",
-      variants: [],
-      sizes: [],
-      priceOld: "",
-      discount: "",
-      badgeTagline: "",
-    });
+    setForm(emptyForm());
     setShowModal(true);
   }
 
   function handleBukaEdit(p: Product) {
-  try {
     setEditingProduct(p);
     setForm({
       thumbnail: p.thumbnail || "",
@@ -277,135 +215,153 @@ export default function Kelola({ onEksporCsv }: KelolaProps) {
       stock: String(p.stock),
       unit: p.unit,
       status: p.status,
-      images: p.images || [],
+      images: p.images?.length ? p.images : p.thumbnail ? [p.thumbnail] : [],
+      description: p.description || "",
       variants: p.variants || [],
       sizes: p.sizes || [],
+      accordions: p.accordions?.length
+        ? p.accordions.map((a) => ({ title: a.title, content: a.content, tags: (a.tags ?? []).join(", ") }))
+        : DEFAULT_ACCORDIONS.map((a) => ({ ...a })),
       priceOld: p.priceOld ? String(p.priceOld) : "",
       discount: p.discount || "",
       badgeTagline: p.badgeTagline || "",
-      description: p.description || "",
     });
     setShowModal(true);
-  } catch (err) {
-    console.error("ERROR EDIT:", err);
-    alert("Error: " + err);
   }
-}
 
-async function handleHapus(id: string) {
-  if (!confirm("Yakin ingin menghapus produk ini?")) return;
-
-  try {
-    const res = await fetch(`/api/produk/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      throw new Error("Gagal menghapus produk dari server");
+  /* ---------- hapus ---------- */
+  async function handleHapus(id: string) {
+    if (!confirm("Yakin ingin menghapus produk ini?")) return;
+    try {
+      const res = await fetch(`/api/produk/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.message || "Gagal menghapus produk dari server");
+      }
+      setProductList((prev) => prev.filter((p) => String(p.id) !== String(id)));
+    } catch (err: any) {
+      console.error("Gagal menghapus produk:", err);
+      alert(err.message || "Terjadi kesalahan saat menghapus produk.");
     }
+  }
 
-    // Hapus dari state UI hanya jika di server sudah berhasil terhapus
-    setProductList((prev) => prev.filter((p) => String(p.id) !== String(id)));
-  } catch (err) {
-    console.error("Gagal menghapus produk:", err);
-    alert("Terjadi kesalahan saat menghapus produk di server.");
+  /* ---------- handler field dinamis ---------- */
+  async function handleUploadFiles(e: React.ChangeEvent<HTMLInputElement>) {
+  const files = Array.from(e.target.files ?? []);
+  e.target.value = "";
+  if (!files.length) return;
+
+  setUploading(true);
+  try {
+    const fd = new FormData();
+    files.forEach((f) => fd.append("files", f));
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Gagal upload foto");
+    setForm((f) => ({ ...f, images: [...f.images, ...data.urls] }));
+  } catch (err: any) {
+    alert(err.message || "Gagal upload foto");
+  } finally {
+    setUploading(false);
   }
 }
 
-  function handleImagesChange(value: string) {
-    const urls = value.split("\n").map((s) => s.trim()).filter(Boolean);
-    setForm({ ...form, images: urls });
-  }
+const handleRemoveImage = (i: number) =>
+  setForm((f) => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }));
 
-  function handleAddVariant() {
+const handleSetMain = (i: number) =>
+  setForm((f) => {
+    const imgs = [...f.images];
+    const [main] = imgs.splice(i, 1);
+    return { ...f, images: [main, ...imgs] };
+  });
+
+  const handleAddVariant = () =>
     setForm({ ...form, variants: [...form.variants, { name: "", icon: "🍏" }] });
-  }
-  function handleVariantChange(index: number, key: "name" | "icon", value: string) {
+  const handleVariantChange = (i: number, key: "name" | "icon", value: string) => {
     const updated = [...form.variants];
-    updated[index] = { ...updated[index], [key]: value };
+    updated[i] = { ...updated[i], [key]: value };
     setForm({ ...form, variants: updated });
-  }
-  function handleRemoveVariant(index: number) {
-    setForm({ ...form, variants: form.variants.filter((_, i) => i !== index) });
-  }
-
-  function handleAddSize() {
-    setForm({ ...form, sizes: [...form.sizes, { label: "", price: 0 }] });
-  }
-  function handleSizeChange(index: number, key: "label" | "price", value: string) {
-    const updated = [...form.sizes];
-    updated[index] = { ...updated[index], [key]: key === "price" ? Number(value) : value };
-    setForm({ ...form, sizes: updated });
-  }
-  function handleRemoveSize(index: number) {
-    setForm({ ...form, sizes: form.sizes.filter((_, i) => i !== index) });
-  }
-
-  async function handleSubmitForm(e: React.FormEvent) {
-  e.preventDefault();
-
-  const payload = {
-    thumbnail: form.thumbnail || "",
-    name: form.name,
-    sku: form.sku,
-    category: form.category,
-    price: Number(form.price),
-    stock: Number(form.stock),
-    unit: form.unit,
-    status: form.status,
-    images: form.images,
-    description: form.description,
-    variants: form.variants,
-    sizes: form.sizes,
-    priceOld: form.priceOld ? Number(form.priceOld) : undefined,
-    discount: form.discount || undefined,
-    badgeTagline: form.badgeTagline || undefined,
   };
+  const handleRemoveVariant = (i: number) =>
+    setForm({ ...form, variants: form.variants.filter((_, idx) => idx !== i) });
 
-  try {
-    if (editingProduct) {
-      // EDIT PRODUK
-      const res = await fetch(`/api/produk/${editingProduct.id}`, {
-        method: "PUT",
+  const handleAddSize = () =>
+    setForm({ ...form, sizes: [...form.sizes, { label: "", price: 0 }] });
+  const handleSizeChange = (i: number, key: "label" | "price", value: string) => {
+    const updated = [...form.sizes];
+    updated[i] = { ...updated[i], [key]: key === "price" ? Number(value) : value };
+    setForm({ ...form, sizes: updated });
+  };
+  const handleRemoveSize = (i: number) =>
+    setForm({ ...form, sizes: form.sizes.filter((_, idx) => idx !== i) });
+
+  const handleAddAccordion = () =>
+    setForm({ ...form, accordions: [...form.accordions, { title: "", content: "", tags: "" }] });
+  const handleAccordionChange = (i: number, key: keyof AccordionForm, value: string) => {
+    const updated = [...form.accordions];
+    updated[i] = { ...updated[i], [key]: value };
+    setForm({ ...form, accordions: updated });
+  };
+  const handleRemoveAccordion = (i: number) =>
+    setForm({ ...form, accordions: form.accordions.filter((_, idx) => idx !== i) });
+
+  /* ---------- simpan ---------- */
+  async function handleSubmitForm(e: React.FormEvent) {
+    e.preventDefault();
+    if (saving) return;
+
+    const payload = {
+      thumbnail: form.images[0] || "",
+      name: form.name,
+      sku: form.sku,
+      category: form.category,
+      price: Number(form.price),
+      stock: Number(form.stock),
+      unit: form.unit,
+      status: form.status,
+      images: form.images,
+      description: form.description,
+      variants: form.variants,
+      sizes: form.sizes,
+      accordions: form.accordions
+        .filter((a) => a.title.trim() && a.content.trim())
+        .map((a) => ({
+          title: a.title.trim(),
+          content: a.content.trim(),
+          tags: a.tags.split(",").map((t) => t.trim()).filter(Boolean),
+        })),
+      priceOld: form.priceOld ? Number(form.priceOld) : null,
+      discount: form.discount || null,
+      badgeTagline: form.badgeTagline || null,
+    };
+
+    setSaving(true);
+    try {
+      const isEdit = !!editingProduct;
+      const res = await fetch(isEdit ? `/api/produk/${editingProduct!.id}` : "/api/produk", {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Gagal menyimpan produk");
 
-      if (!res.ok) throw new Error("Gagal mengupdate produk di database");
-
-      // Update state lokal setelah backend sukses
       setProductList((prev) =>
-        prev.map((p) => (p.id === editingProduct.id ? { ...p, ...payload } : p))
+        isEdit
+          ? prev.map((p) => (String(p.id) === String(data.id) ? data : p))
+          : [data, ...prev]
       );
-    } else {
-      // TAMBAH PRODUK BARU
-      const res = await fetch("/api/produk", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error("Gagal menyimpan produk ke database");
-
-      // Ambil data hasil insert (termasuk ID resmi dari MySQL)
-      const dataBaru = await res.json();
-      
-      // Jika backend hanya kirim { success: true, insertId: ... }, sesuaikan dengan dataBaru.insertId
-      const createdItem: Product = {
-        id: String(dataBaru.insertId || dataBaru.id || Date.now()),
-        ...payload,
-      };
-
-      setProductList((prev) => [createdItem, ...prev]);
+      setShowModal(false);
+    } catch (err: any) {
+      console.error("Error submit form:", err);
+      alert(err.message || "Gagal menyimpan data.");
+    } finally {
+      setSaving(false);
     }
-
-    setShowModal(false);
-  } catch (err) {
-    console.error("Error submit form:", err);
-    alert("Gagal menyimpan data ke database. Cek terminal / console.");
   }
-}
 
+  /* ---------------------------------------------------------------- */
   return (
     <div className={styles.wrapper}>
       <div className={styles.header}>
@@ -420,12 +376,10 @@ async function handleHapus(id: string) {
 
         <div className={styles.actions}>
           <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={onEksporCsv}>
-            <IconDownload />
-            Ekspor CSV
+            <IconDownload /> Ekspor CSV
           </button>
           <button type="button" className={cx(styles.btn, styles.btnPrimary)} onClick={handleBukaTambah}>
-            <IconPlus />
-            Tambah Produk
+            <IconPlus /> Tambah Produk
           </button>
         </div>
       </div>
@@ -450,9 +404,7 @@ async function handleHapus(id: string) {
 
         <select className={styles.select} value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
           {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat === "Semua" ? "Semua Kategori" : cat}
-            </option>
+            <option key={cat} value={cat}>{cat === "Semua" ? "Semua Kategori" : cat}</option>
           ))}
         </select>
 
@@ -483,11 +435,7 @@ async function handleHapus(id: string) {
                 <td>
                   <div className={styles.thumb}>
                     {p.thumbnail ? (
-                      <img
-                        src={p.thumbnail}
-                        alt={p.name}
-                        style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8 }}
-                      />
+                      <img src={p.thumbnail} alt={p.name} style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 8 }} />
                     ) : (
                       "📦"
                     )}
@@ -497,9 +445,7 @@ async function handleHapus(id: string) {
                   <div className={styles.prodName}>{p.name}</div>
                   <div className={styles.prodSku}>SKU: {p.sku}</div>
                 </td>
-                <td>
-                  <span className={styles.category}>{p.category}</span>
-                </td>
+                <td><span className={styles.category}>{p.category}</span></td>
                 <td className={cx(styles.colNum, styles.price)}>{formatRupiah(p.price)}</td>
                 <td className={styles.colNum}>
                   <span className={p.status === "Stok Menipis" ? cx(styles.stock, styles.stockWarn) : styles.stock}>
@@ -518,12 +464,7 @@ async function handleHapus(id: string) {
                     <button type="button" className={styles.rowBtn} aria-label="Edit Produk" onClick={() => handleBukaEdit(p)}>
                       <IconEdit />
                     </button>
-                    <button
-                      type="button"
-                      className={cx(styles.rowBtn, styles.rowBtnDanger)}
-                      aria-label="Hapus Produk"
-                      onClick={() => handleHapus(p.id)}
-                    >
+                    <button type="button" className={cx(styles.rowBtn, styles.rowBtnDanger)} aria-label="Hapus Produk" onClick={() => handleHapus(p.id)}>
                       <IconTrash />
                     </button>
                   </div>
@@ -534,7 +475,7 @@ async function handleHapus(id: string) {
             {filtered.length === 0 && (
               <tr>
                 <td colSpan={7} className={styles.empty}>
-                  Tidak ada produk yang cocok dengan pencarian/filter.
+                  {loadingData ? "Memuat data..." : "Tidak ada produk yang cocok dengan pencarian/filter."}
                 </td>
               </tr>
             )}
@@ -546,112 +487,77 @@ async function handleHapus(id: string) {
         <span className={styles.footerText}>
           Menampilkan {filtered.length} dari {productList.length} produk
         </span>
-
         <div className={styles.pagination}>
-          <button type="button" className={styles.pageBtn} disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
-            ‹
-          </button>
-          <button type="button" className={cx(styles.pageBtn, styles.pageBtnActive)}>
-            {page}
-          </button>
-          <button type="button" className={styles.pageBtn} onClick={() => setPage((p) => p + 1)}>
-            Next ›
-          </button>
+          <button type="button" className={styles.pageBtn} disabled={page === 1} onClick={() => setPage((p) => p - 1)}>‹</button>
+          <button type="button" className={cx(styles.pageBtn, styles.pageBtnActive)}>{page}</button>
+          <button type="button" className={styles.pageBtn} onClick={() => setPage((p) => p + 1)}>Next ›</button>
         </div>
       </div>
 
       {showModal && (
         <div className={styles.overlay} onClick={() => setShowModal(false)}>
-          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+          <div
+            className={styles.modal}
+            style={{ maxHeight: "90vh", overflowY: "auto" }}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>{editingProduct ? "Edit Produk" : "Tambah Produk Baru"}</h2>
-              <button type="button" className={styles.modalClose} onClick={() => setShowModal(false)}>
-                ✕
-              </button>
+              <button type="button" className={styles.modalClose} onClick={() => setShowModal(false)}>✕</button>
             </div>
 
             <form onSubmit={handleSubmitForm}>
+              {/* ===== Info dasar ===== */}
               <div className={styles.formRow}>
-                <div className={styles.formGroup} style={{ flex: 1 }}>
-                  <label className={styles.formLabel}>URL Foto Produk</label>
-                  <input
-                    className={styles.formInput}
-                    placeholder="/foto/produk1.jpg"
-                    value={form.thumbnail}
-                    onChange={(e) => setForm({ ...form, thumbnail: e.target.value })}
-                  />
-                </div>
+                <div className={styles.formGroup}>
+  <label className={styles.formLabel}>Nama Produk</label>
+  <input className={styles.formInput} value={form.name}
+    onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+</div>
                 <div className={styles.formGroup} style={{ flex: 3 }}>
                   <label className={styles.formLabel}>Nama Produk</label>
-                  <input
-                    className={styles.formInput}
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    required
-                  />
+                  <input className={styles.formInput} value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })} required />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>SKU</label>
-                  <input
-                    className={styles.formInput}
-                    value={form.sku}
-                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                    required
-                  />
+                  <input className={styles.formInput} value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })} required />
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Kategori</label>
-                  <input
-                    className={styles.formInput}
-                    value={form.category}
-                    onChange={(e) => setForm({ ...form, category: e.target.value })}
-                    required
-                  />
+                  <input className={styles.formInput} value={form.category}
+                    onChange={(e) => setForm({ ...form, category: e.target.value })} required />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Harga (Rp)</label>
-                  <input
-                    className={styles.formInput}
-                    type="number"
-                    value={form.price}
-                    onChange={(e) => setForm({ ...form, price: e.target.value })}
-                    required
-                  />
+                  <input className={styles.formInput} type="text" inputMode="numeric" placeholder="40.000"
+  value={fmtInput(form.price)}
+  onChange={(e) => setForm({ ...form, price: digits(e.target.value) })} required />
                 </div>
-                                <div className={styles.formGroup}>
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Stok Fisik</label>
-                  <input
-                    className={styles.formInput}
-                    type="number"
-                    value={form.stock}
-                    onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                    required
-                  />
+                  <input className={styles.formInput} type="number" min={0} value={form.stock}
+                    onChange={(e) => setForm({ ...form, stock: e.target.value })} required />
                 </div>
               </div>
 
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Satuan</label>
-                  <input
-                    className={styles.formInput}
-                    value={form.unit}
-                    onChange={(e) => setForm({ ...form, unit: e.target.value })}
-                  />
+                  <input className={styles.formInput} value={form.unit}
+                    onChange={(e) => setForm({ ...form, unit: e.target.value })} />
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Status Stok</label>
-                  <select
-                    className={styles.formInput}
-                    value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value as StockStatus })}
-                  >
+                  <select className={styles.formInput} value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value as StockStatus })}>
                     <option value="Tersedia">Tersedia</option>
                     <option value="Stok Menipis">Stok Menipis</option>
                     <option value="Habis">Habis</option>
@@ -659,81 +565,79 @@ async function handleHapus(id: string) {
                 </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Galeri Foto (1 URL per baris)</label>
-                <textarea
-                  className={styles.formInput}
-                  rows={3}
-                  placeholder={"/foto/produk1.jpg\n/foto/produk2.jpg"}
-                  value={form.images.join("\n")}
-                  onChange={(e) => handleImagesChange(e.target.value)}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Badge Tagline (opsional)</label>
-                <input
-                  className={styles.formInput}
-                  placeholder="misal: 100% Apel Manalagi Asli"
-                  value={form.badgeTagline}
-                  onChange={(e) => setForm({ ...form, badgeTagline: e.target.value })}
-                />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label className={styles.formLabel}>Deskripsi Produk</label>
-                <textarea
-                  className={styles.formInput}
-                  rows={4}
-                  placeholder="Jelaskan keunggulan, komposisi, atau info produk lainnya..."
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                />
-              </div>
-
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Harga Coret (opsional)</label>
-                  <input
-                    className={styles.formInput}
-                    type="number"
-                    placeholder="misal: 42000"
-                    value={form.priceOld}
-                    onChange={(e) => setForm({ ...form, priceOld: e.target.value })}
-                  />
+                  <input className={styles.formInput} type="text" inputMode="numeric" placeholder="42.000"
+  value={fmtInput(form.priceOld)}
+  onChange={(e) => setForm({ ...form, priceOld: digits(e.target.value) })} />
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Label Diskon (opsional)</label>
-                  <input
-                    className={styles.formInput}
-                    placeholder="misal: 16%"
-                    value={form.discount}
-                    onChange={(e) => setForm({ ...form, discount: e.target.value })}
-                  />
+                  <input className={styles.formInput} placeholder="misal: 16%" value={form.discount}
+                    onChange={(e) => setForm({ ...form, discount: e.target.value })} />
                 </div>
+              </div>
+
+              {/* ===== Halaman detail ===== */}
+              <div className={styles.formGroup}>
+  <label className={styles.formLabel}>Foto Produk (foto pertama jadi foto utama)</label>
+
+  <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 10 }}>
+    {form.images.map((url, i) => (
+      <div key={url + i} style={{ width: 96 }}>
+        <div style={{ position: "relative" }}>
+          <img src={url} alt={`Foto ${i + 1}`}
+            style={{ width: 96, height: 96, objectFit: "cover", borderRadius: 10, border: "1px solid #e5e7eb" }} />
+          {i === 0 && (
+            <span style={{ position: "absolute", top: 4, left: 4, background: "#F0801C", color: "#fff",
+              fontSize: 10, fontWeight: 700, padding: "2px 6px", borderRadius: 6 }}>Utama</span>
+          )}
+        </div>
+        <div style={{ display: "flex", gap: 4, marginTop: 4 }}>
+          {i !== 0 && (
+            <button type="button" onClick={() => handleSetMain(i)}
+              style={{ flex: 1, fontSize: 11, cursor: "pointer" }}>Utama</button>
+          )}
+          <button type="button" onClick={() => handleRemoveImage(i)}
+            style={{ flex: 1, fontSize: 11, cursor: "pointer", color: "#b91c1c" }}>Hapus</button>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <label className={cx(styles.btn, styles.btnGhost)} style={{ cursor: uploading ? "wait" : "pointer" }}>
+    <IconPlus /> {uploading ? "Mengunggah..." : "Upload Foto"}
+    <input type="file" accept="image/jpeg,image/png,image/webp" multiple hidden
+      disabled={uploading} onChange={handleUploadFiles} />
+  </label>
+  <small style={{ display: "block", marginTop: 6, opacity: 0.7 }}>JPG / PNG / WebP, maks. 5 MB per foto.</small>
+</div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Badge Tagline (opsional)</label>
+                <input className={styles.formInput} placeholder="misal: 100% Apel Manalagi Asli"
+                  value={form.badgeTagline}
+                  onChange={(e) => setForm({ ...form, badgeTagline: e.target.value })} />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>Deskripsi Singkat</label>
+                <textarea className={styles.formInput} rows={3}
+                  placeholder="Ringkasan produk (dipakai sebagai cadangan jika detail informasi kosong)"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })} />
               </div>
 
               <div className={styles.formGroup}>
                 <label className={styles.formLabel}>Varian Rasa</label>
                 {form.variants.map((v, i) => (
                   <div key={i} className={styles.formRow} style={{ marginBottom: 8 }}>
-                    <input
-                      className={styles.formInput}
-                      style={{ flex: 0.5 }}
-                      placeholder="🍏"
-                      value={v.icon}
-                      onChange={(e) => handleVariantChange(i, "icon", e.target.value)}
-                    />
-                    <input
-                      className={styles.formInput}
-                      style={{ flex: 2 }}
-                      placeholder="Nama varian (misal: Original Manalagi)"
-                      value={v.name}
-                      onChange={(e) => handleVariantChange(i, "name", e.target.value)}
-                    />
-                    <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={() => handleRemoveVariant(i)}>
-                      Hapus
-                    </button>
+                    <input className={styles.formInput} style={{ flex: 0.5 }} placeholder="🍏" value={v.icon}
+                      onChange={(e) => handleVariantChange(i, "icon", e.target.value)} />
+                    <input className={styles.formInput} style={{ flex: 2 }} placeholder="Nama varian (misal: Original)"
+                      value={v.name} onChange={(e) => handleVariantChange(i, "name", e.target.value)} />
+                    <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={() => handleRemoveVariant(i)}>Hapus</button>
                   </div>
                 ))}
                 <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={handleAddVariant}>
@@ -745,22 +649,12 @@ async function handleHapus(id: string) {
                 <label className={styles.formLabel}>Ukuran Kemasan &amp; Harga</label>
                 {form.sizes.map((s, i) => (
                   <div key={i} className={styles.formRow} style={{ marginBottom: 8 }}>
-                    <input
-                      className={styles.formInput}
-                      placeholder="misal: 100g"
-                      value={s.label}
-                      onChange={(e) => handleSizeChange(i, "label", e.target.value)}
-                    />
-                    <input
-                      className={styles.formInput}
-                      type="number"
-                      placeholder="Harga (Rp)"
-                      value={s.price || ""}
-                      onChange={(e) => handleSizeChange(i, "price", e.target.value)}
-                    />
-                    <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={() => handleRemoveSize(i)}>
-                      Hapus
-                    </button>
+                    <input className={styles.formInput} placeholder="misal: 100g" value={s.label}
+                      onChange={(e) => handleSizeChange(i, "label", e.target.value)} />
+                    <input className={styles.formInput} type="text" inputMode="numeric" placeholder="Harga (Rp)"
+  value={s.price ? s.price.toLocaleString("id-ID") : ""}
+  onChange={(e) => handleSizeChange(i, "price", digits(e.target.value))} />
+                    <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={() => handleRemoveSize(i)}>Hapus</button>
                   </div>
                 ))}
                 <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={handleAddSize}>
@@ -768,12 +662,40 @@ async function handleHapus(id: string) {
                 </button>
               </div>
 
+              {/* ===== Detail Informasi (accordion) ===== */}
+              <div className={styles.formGroup}>
+                <label className={styles.formLabel}>
+                  Detail Informasi Produk (tampil sebagai accordion di halaman detail)
+                </label>
+                {form.accordions.map((a, i) => (
+                  <div key={i}
+                    style={{ border: "1px solid #e5e7eb", borderRadius: 10, padding: 12, marginBottom: 10 }}>
+                    <div className={styles.formRow} style={{ marginBottom: 8 }}>
+                      <input className={styles.formInput} style={{ flex: 1 }} placeholder="Judul bagian"
+                        value={a.title} onChange={(e) => handleAccordionChange(i, "title", e.target.value)} />
+                      <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={() => handleRemoveAccordion(i)}>
+                        Hapus
+                      </button>
+                    </div>
+                    <textarea className={styles.formInput} rows={3} style={{ marginBottom: 8 }}
+                      placeholder="Isi penjelasan..." value={a.content}
+                      onChange={(e) => handleAccordionChange(i, "content", e.target.value)} />
+                    <input className={styles.formInput}
+                      placeholder="Tag (pisahkan dengan koma): 🍏 100% Apel Segar, ✨ Renyah Tahan Lama"
+                      value={a.tags} onChange={(e) => handleAccordionChange(i, "tags", e.target.value)} />
+                  </div>
+                ))}
+                <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={handleAddAccordion}>
+                  <IconPlus /> Tambah Bagian Informasi
+                </button>
+              </div>
+
               <div className={styles.modalFooter}>
                 <button type="button" className={cx(styles.btn, styles.btnGhost)} onClick={() => setShowModal(false)}>
                   Batal
                 </button>
-                <button type="submit" className={cx(styles.btn, styles.btnPrimary)}>
-                  {editingProduct ? "Simpan Perubahan" : "Tambah Produk"}
+                <button type="submit" className={cx(styles.btn, styles.btnPrimary)} disabled={saving || uploading}>
+                  {saving ? "Menyimpan..." : editingProduct ? "Simpan Perubahan" : "Tambah Produk"}
                 </button>
               </div>
             </form>
@@ -785,7 +707,7 @@ async function handleHapus(id: string) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  StatCard Sub-Component                                           */
+/*  StatCard                                                          */
 /* ------------------------------------------------------------------ */
 
 interface StatCardProps {
@@ -797,10 +719,10 @@ interface StatCardProps {
 }
 
 const toneClass: Record<StatCardProps["tone"], string> = {
-  neutral: styles.statIconNeutral,
-  ok: styles.statIconOk,
-  warn: styles.statIconWarn,
-  off: styles.statIconOff,
+  neutral: styles.statIconNeutral || "",
+  ok: styles.statIconOk || "",
+  warn: styles.statIconWarn || "",
+  off: styles.statIconOff || "",
 };
 
 function StatCard({ label, value, unit, tone, icon }: StatCardProps) {

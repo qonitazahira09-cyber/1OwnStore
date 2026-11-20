@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Link } from "@/i18n/routing";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./Sprofile.module.css";
+import { signOut } from "next-auth/react";
 
 // ==== Ganti href di sini sesuai nama folder route kamu ====
 const menuItems = [
@@ -34,7 +35,14 @@ export default function Sprofile() {
     fetch("/api/user/me")
       .then((res) => res.json())
       .then((data) => {
-        if (data.nama) setUser(data);
+        // Antisipasi jika API mengirim 'nama' atau 'name' dari Google
+        const userName = data.nama || data.name;
+        if (userName) {
+          setUser({
+            ...data,
+            nama: userName, // Seragamkan ke 'nama'
+          });
+        }
       })
       .catch(() => setUser(null));
   }, []);
@@ -49,15 +57,21 @@ export default function Sprofile() {
     : "";
 
   async function handleLogout() {
-    setLoggingOut(true);
-    try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/id/masuk");
-    } catch (err) {
-      console.error(err);
-      setLoggingOut(false);
-    }
+  setLoggingOut(true);
+  try {
+    // 1. Hapus cookie login manual
+    await fetch("/api/auth/logout", { method: "POST" });
+
+    // 2. Hapus cookie NextAuth (Google)
+    await signOut({ redirect: false });
+
+    // 3. Pindah halaman + reload penuh supaya state lama hilang
+    window.location.href = "/id/masuk";
+  } catch (err) {
+    console.error(err);
+    setLoggingOut(false);
   }
+}
 
   return (
     <>

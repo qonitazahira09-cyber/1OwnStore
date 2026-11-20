@@ -1,69 +1,38 @@
-import { db } from "@/lib/db";
+// app/api/produk/[id]/route.ts
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+import { bodyToRow, rowToProduct } from "@/lib/produk";
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
-  try {
-    const [rows] = await db.query("SELECT * FROM produk WHERE id = ?", [params.id]);
-    const product = (rows as any[])[0];
-    
-    if (!product) {
-      return NextResponse.json({ error: "Produk tidak ditemukan" }, { status: 404 });
-    }
+type Ctx = { params: Promise<{ id: string }> };
 
-    const parsed = {
-      ...product,
-      images: product.images ? JSON.parse(product.images) : [],
-      variants: product.variants ? JSON.parse(product.variants) : [],
-      sizes: product.sizes ? JSON.parse(product.sizes) : [],
-    };
-
-    return NextResponse.json(parsed);
-  } catch (error) {
-    console.error("Error fetching product:", error);
-    return NextResponse.json({ error: "Gagal mengambil data produk" }, { status: 500 });
-  }
+export async function GET(_req: Request, { params }: Ctx) {
+  const { id } = await params;
+  const { data, error } = await supabase.from("produk").select("*").eq("id", id).maybeSingle();
+  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  if (!data) return NextResponse.json({ message: "Produk tidak ditemukan" }, { status: 404 });
+  return NextResponse.json(rowToProduct(data));
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
-  try {
-    const b = await req.json();
+export async function PUT(req: Request, { params }: Ctx) {
+  // TODO: cek session admin
+  const { id } = await params;
+  const row = bodyToRow(await req.json());
 
-    await db.query(
-      `UPDATE produk SET thumbnail=?, name=?, sku=?, category=?, price=?, stock=?, unit=?, status=?,
-       images=?, description=?, variants=?, sizes=?, price_old=?, discount=?, badge_tagline=? WHERE id=?`,
-      [
-        b.thumbnail || "",
-        b.name,
-        b.sku,
-        b.category,
-        Number(b.price) || 0,
-        Number(b.stock) || 0,
-        b.unit || "pcs",
-        b.status || "Tersedia",
-        JSON.stringify(b.images || []),
-        b.description || "",
-        JSON.stringify(b.variants || []),
-        JSON.stringify(b.sizes || []),
-        b.priceOld ? Number(b.priceOld) : null,
-        b.discount || null,
-        b.badgeTagline || "",
-        params.id, // Parameter id untuk WHERE id=?
-      ]
-    );
+  const { data, error } = await supabase
+    .from("produk").update(row).eq("id", id).select().maybeSingle();
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error updating product:", error);
-    return NextResponse.json({ error: "Gagal mengupdate produk" }, { status: 500 });
+  if (error) {
+    const msg = error.code === "23505" ? "SKU sudah dipakai produk lain" : error.message;
+    return NextResponse.json({ message: msg }, { status: 400 });
   }
+  if (!data) return NextResponse.json({ message: "Produk tidak ditemukan" }, { status: 404 });
+  return NextResponse.json(rowToProduct(data));
 }
 
-export async function DELETE(_: Request, { params }: { params: { id: string } }) {
-  try {
-    await db.query("DELETE FROM produk WHERE id = ?", [params.id]);
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting product:", error);
-    return NextResponse.json({ error: "Gagal menghapus produk" }, { status: 500 });
-  }
+export async function DELETE(_req: Request, { params }: Ctx) {
+  // TODO: cek session admin
+  const { id } = await params;
+  const { error } = await supabase.from("produk").delete().eq("id", id);
+  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
 }

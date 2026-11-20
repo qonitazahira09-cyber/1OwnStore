@@ -1,33 +1,34 @@
-import { db } from "@/lib/db";
+// app/api/produk/route.ts
 import { NextResponse } from "next/server";
+import { supabase } from "@/lib/supabase";
+import { bodyToRow, rowToProduct } from "@/lib/produk";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const [rows] = await db.query("SELECT * FROM produk ORDER BY created_at DESC");
-  const parsed = (rows as any[]).map((r) => ({
-    ...r,
-    images: r.images ? JSON.parse(r.images) : [],
-    variants: r.variants ? JSON.parse(r.variants) : [],
-    sizes: r.sizes ? JSON.parse(r.sizes) : [],
-  }));
-  return NextResponse.json(parsed);
+  const { data, error } = await supabase
+    .from("produk")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) return NextResponse.json({ message: error.message }, { status: 500 });
+  return NextResponse.json((data ?? []).map(rowToProduct));
 }
 
 export async function POST(req: Request) {
-  const b = await req.json();
-  const [result] = await db.query(
-    `INSERT INTO produk (thumbnail,name,sku,category,price,stock,unit,status,images,description,variants,sizes,price_old,discount,badge_tagline)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [
-      b.thumbnail || "",
-      b.name, b.sku, b.category, b.price, b.stock, b.unit, b.status,
-      JSON.stringify(b.images || []),
-      b.description || "",
-      JSON.stringify(b.variants || []),
-      JSON.stringify(b.sizes || []),
-      b.priceOld || null,
-      b.discount || null,
-      b.badgeTagline || "",
-    ]
-  );
-  return NextResponse.json({ success: true, id: (result as any).insertId });
+  // TODO: cek session admin di sini (next-auth) sebelum lanjut
+  const body = await req.json();
+  const row = bodyToRow(body);
+
+  if (!row.name || !row.sku) {
+    return NextResponse.json({ message: "Nama dan SKU wajib diisi" }, { status: 400 });
+  }
+
+  const { data, error } = await supabase.from("produk").insert(row).select().single();
+
+  if (error) {
+    const msg = error.code === "23505" ? "SKU sudah dipakai produk lain" : error.message;
+    return NextResponse.json({ message: msg }, { status: 400 });
+  }
+  return NextResponse.json(rowToProduct(data), { status: 201 });
 }

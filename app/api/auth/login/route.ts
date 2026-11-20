@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { db } from "@/lib/db";
+import { supabase } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
@@ -14,12 +14,20 @@ export async function POST(req: Request) {
       );
     }
 
-    // 1. Cari user berdasarkan email
-    const [rows]: any = await db.query(
-      "SELECT id, nama, email, password FROM users WHERE email = ?",
-      [email]
-    );
-    const user = rows[0];
+    // 1. Cari user berdasarkan email (Metode Supabase JS Client)
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, nama, email, password")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Supabase Error:", error);
+      return NextResponse.json(
+        { message: "Terjadi kesalahan server" },
+        { status: 500 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(

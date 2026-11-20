@@ -376,6 +376,42 @@ button, select, input { font-family: var(--font-body); }
   margin: 16px 0 0;
 }
 
+.item-variant-text { display: flex; flex-wrap: wrap; gap: 6px; }
+.item-variant-text span {
+  background: #FAF3E6; border: 1px solid var(--border-soft);
+  border-radius: 8px; padding: 6px 10px; font-size: 13px; font-weight: 600;
+}
+.item-info h3 a:hover { color: var(--orange-dark); }
+.cart-empty { padding: 40px 0; color: var(--text-muted); font-size: 15px; }
+.cart-error {
+  background: #FDECEC; color: var(--red); font-weight: 600; font-size: 14px;
+  padding: 10px 14px; border-radius: 8px; margin-bottom: 16px;
+}
+.qty-btn:disabled, .remove-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.checkout-btn { text-decoration: none; }
+
+.item-check, .select-all input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--orange);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 0 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.checkout-btn:disabled {
+  background: #D9CDBE;
+  cursor: not-allowed;
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 980px) {

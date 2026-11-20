@@ -33,7 +33,7 @@ export default function LoginPage() {
       }
 
       setMessage("Berhasil masuk!");
-      router.push("/"); // arahkan ke beranda setelah berhasil
+      window.location.href = "/id/profile/biodataProfile";
     } catch (err: any) {
       setMessage(err.message || "Gagal terhubung ke server");
     } finally {
@@ -116,7 +116,7 @@ export default function LoginPage() {
               type="button"
               className={styles.socialButton}
               aria-label="Masuk dengan Google"
-              onClick={() => signIn("google", { callbackUrl: "/" })}
+              onClick={() => signIn("google", { callbackUrl: "/id/profile/biodataProfile" })}
             >
               <GoogleIcon />
             </button>

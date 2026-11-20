@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
-import { db } from "@/lib/db";
+import { supabase } from "@/lib/db";
 
 // Tipe data yang disimpan di dalam token JWT
 type SessionPayload = {
-  id: number;
+  id: string; // Supabase menggunakan UUID (string), bukan number lagi
   nama: string;
   email: string;
 };
@@ -27,17 +27,24 @@ export async function getCurrentUser(): Promise<SessionPayload | null> {
 }
 
 /**
- * Ambil data lengkap user dari database (nama, email, whatsapp, dll)
+ * Ambil data lengkap user dari database (nama, email, nomor_telpon, dll)
  * berdasarkan id yang ada di token. Dipakai untuk halaman profil.
  */
 export async function getCurrentUserProfile() {
   const session = await getCurrentUser();
   if (!session) return null;
 
-  const [rows]: any = await db.query(
-    "SELECT id, nama, email, whatsapp, email_verified FROM users WHERE id = ?",
-    [session.id]
-  );
+  // Query data user dari Supabase berdasarkan ID
+  const { data: user, error } = await supabase
+    .from("users")
+    .select("id, nama, email, nomor_telpon")
+    .eq("id", session.id)
+    .maybeSingle();
 
-  return rows[0] || null;
+  if (error) {
+    console.error("Gagal mengambil profil user dari Supabase:", error);
+    return null;
+  }
+
+  return user || null;
 }

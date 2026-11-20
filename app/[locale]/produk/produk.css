@@ -930,6 +930,42 @@ button { font-family: var(--font-body); cursor: pointer; }
 }
 .submit-review-btn:hover { background: var(--red-dark); }
 
+.cta-row {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.cta-row .btn-add-cart {
+  flex: 1;
+}
+
+.btn-cart-icon {
+  flex-shrink: 0;
+  width: 69px;              /* samakan dengan tinggi tombol Beli */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff3e0;      /* krem oranye lembut, senada dengan tombol Beli */
+  color: #1a1a1a;           /* icon tetap hitam */
+  border: 2px solid #f5841f;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-cart-icon:hover {
+  background: #fde0b8;
+  transform: translateY(-1px);
+}
+
+.btn-cart-icon:active {
+  transform: translateY(0);
+}
+
+.cart-msg { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: #2E9B57; }
+.btn-cart-icon:disabled { opacity: 0.6; cursor: wait; }
+
 @media (max-width: 560px) {
   .review-modal { padding: 24px; }
   .modal-footer-row { flex-direction: column; align-items: stretch; }
